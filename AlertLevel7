@@ -1,0 +1,98 @@
+#property description "Советник демонстрирует создание серии скриншотов текущего графика" 
+#property description "с помощью функции ChartScreenShot(). Имя файла для удобства также" 
+#property description "выводится на график. Высота и ширина рисунков задается макросами." 
+  
+#define        WIDTH  800     // ширина рисунка для вызова  ChartScreenShot() 
+#define        HEIGHT 600     // высота рисунка для вызова  ChartScreenShot() 
+  
+//--- input parameters 
+input int      pictures=5;    // количество рисунков в серии 
+int            mode=-1;       // -1 означает смещение к правому краю графика, 1 - к левому 
+int            bars_shift=300;// количество баров при прокрутке графика функцией ChartNavigate() 
+//+------------------------------------------------------------------+ 
+//| Expert initialization function                                   | 
+//+------------------------------------------------------------------+ 
+void OnInit() 
+  { 
+//--- отключим автопрокрутку графика 
+   ChartSetInteger(0,CHART_AUTOSCROLL,false); 
+//--- установим отступ правого края графика 
+   ChartSetInteger(0,CHART_SHIFT,true); 
+//--- установим отображение графика в виде свечей 
+   ChartSetInteger(0,CHART_MODE,CHART_CANDLES); 
+//--- 
+   Print("Подготовка советника к работе завершена"); 
+  } 
+//+------------------------------------------------------------------+ 
+//| Expert tick function                                             | 
+//+------------------------------------------------------------------+ 
+void OnTick() 
+  { 
+//--- 
+  
+  } 
+//+------------------------------------------------------------------+ 
+//| ChartEvent function                                              | 
+//+------------------------------------------------------------------+ 
+void OnChartEvent(const int id, 
+                  const long &lparam, 
+                  const double &dparam, 
+                  const string &sparam) 
+  { 
+//--- вывод имени функции, времени вызова и идентификатора события 
+   Print(__FUNCTION__,TimeCurrent(),"   id=",id,"   mode=",mode); 
+//--- обработка события CHARTEVENT_CLICK ("Нажатие кнопки мышки на графике") 
+   if(id==CHARTEVENT_CLICK) 
+     { 
+      //--- начальное смещение от края графика 
+      int pos=0; 
+      //--- режим работы с левым краем графика 
+      if(mode>0) 
+        { 
+         //--- прокрутим график к левому краю 
+         ChartNavigate(0,CHART_BEGIN,pos); 
+         for(int i=0;i<pictures;i++) 
+           { 
+            //--- подготовим подпись на графике и имя для файла 
+            string name="ChartScreenShot"+"CHART_BEGIN"+string(pos)+".gif"; 
+            //--- вывод имени на график в виде комментария 
+            Comment(name); 
+            //--- сохраним скриншот графика в папку каталог_терминала\MQL4\Files\ 
+            if(ChartScreenShot(0,name,WIDTH,HEIGHT,ALIGN_LEFT)) 
+               Print("Сохранили скриншот ",name); 
+            //--- 
+            pos+=bars_shift; 
+            //--- дадим пользователю время чтобы посмотреть на новый участок графика 
+            Sleep(3000); 
+            //--- прокрутим график от текущей позиции на bars_shift вправо 
+            ChartNavigate(0,CHART_CURRENT_POS,bars_shift); 
+           } 
+         //--- смена режима на противоположный 
+         mode*=-1; 
+        } 
+      else // режим работы с правым краем графика 
+        { 
+         //--- прокрутим график к правому краю 
+         ChartNavigate(0,CHART_END,pos); 
+         for(int k=0;k<pictures;k++) 
+           { 
+            //--- подготовим подпись на графике и имя для файла 
+            string name_1="ChartScreenShot"+"CHART_END"+string(pos)+".gif"; 
+            //--- вывод имени на график в виде комментария 
+            Comment(name_1); 
+            //--- сохраним скриншот графика в папку каталог_терминала\MQL4\Files\ 
+            if(ChartScreenShot(0,name_1,WIDTH,HEIGHT,ALIGN_RIGHT)) 
+               Print("Сохранили скриншот ",name_1); 
+            //--- 
+            pos+=bars_shift; 
+            //--- дадим пользователю время чтобы посмотреть на новый участок графика 
+            Sleep(3000); 
+            //--- прокрутим график от текущей позиции на bars_shift вправо 
+            ChartNavigate(0,CHART_CURRENT_POS,-bars_shift); 
+           } 
+         //--- смена режима на противоположный 
+         mode*=-1; 
+        } 
+     }  // конец обработки события CHARTEVENT_CLICK 
+//--- конец обработчика OnChartEvent()    
+  }
